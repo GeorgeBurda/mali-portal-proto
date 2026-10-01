@@ -224,7 +224,7 @@ var CONFIG = {
     LADDER: [[1, 2, 3, 4, 5, 5], [5, 8, 10, 12, 15, 20], [20, 25, 30, 40, 50, 70], [80, 100, 150, 200, 300, 500]],
     TIER_W: [[55, 25, 11, 6, 3], [50, 25, 13, 8, 4], [50, 25, 13, 8, 4], [45, 25, 15, 10, 5]],
     // per live cell per respin: coin / portal / expand chances by set (index 0 = bottom); coins are sticky and reset respins
-    P_COIN: [0.045, 0.03, 0.03, 0.05], P_PORTAL: [0.012, 0.0265, 0.01, 0], P_EXPAND: [0, 0.05, 0.05, 0.05]
+    P_COIN: [0.045, 0.03, 0.03, 0.05], P_PORTAL: [0.0115, 0.019, 0.006, 0], P_EXPAND: [0, 0.012, 0.012, 0.012]
   },
   PAYLINES: null
 };
@@ -290,11 +290,7 @@ var MP = (function () {
       gildSet(st, k + 1, ev); }
     return true;
   }
-  function expandTarget(st, k, i, rng) {
-    var x = Math.floor(i / 3), y = i % 3, best = [], bd = 99;
-    st.sets[k].forEach(function (c, j) { if (c.st !== 'locked') return; var d = Math.abs(Math.floor(j / 3) - x) + Math.abs(j % 3 - y); if (d < bd) { bd = d; best = [j]; } else if (d === bd) best.push(j); });
-    return best.length ? best[rint(rng, best.length)] : -1;
-  }
+  function randomLocked(st, k, rng) { var a = []; st.sets[k].forEach(function (c, j) { if (c.st === 'locked') a.push(j); }); return a.length ? a[rint(rng, a.length)] : -1; }
   function spinStep(st, rng) { // one respin of every live cell; returns events
     var ev = [], reset = false, landed = []; st.spins++;
     for (var k = 0; k < F.SETS; k++) for (var i = 0; i < 15; i++) {
@@ -312,8 +308,11 @@ var MP = (function () {
     landed.forEach(function (q) { var k = q[0], i = q[1], c = st.sets[k][i];
       if (st.capped) return;
       if (c.kind === 'coin') { st.held += c.v; reset = true; if (st.total + st.held >= F.MAX_WIN_X) st.capped = true; }
-      else if (c.kind === 'portal') { if (k + 1 < F.SETS && open(st, k + 1, i, ev, 'portal', [k, i])) reset = true; }
-      else if (c.kind === 'expand') { var j = expandTarget(st, k, i, rng); if (j >= 0) { open(st, k, j, ev, 'expand', [k, i]); reset = true; } else ev.push({ type: 'noop', set: k, cell: i, how: 'expand', from: [k, i] }); }
+      else if (c.kind === 'portal' || c.kind === 'expand') { // non-blocking: opens a random still-locked cell (next set up / same set), then leaves its own cell free
+        var tk = c.kind === 'portal' ? k + 1 : k, j = tk < F.SETS ? randomLocked(st, tk, rng) : -1;
+        if (j >= 0) { open(st, tk, j, ev, c.kind, [k, i]); reset = true; } else ev.push({ type: 'noop', set: k, cell: i, how: c.kind, from: [k, i] });
+        var kind = c.kind; st.sets[k][i] = { st: 'live' }; ev.push({ type: 'free', set: k, cell: i, kind: kind });
+      }
     });
     if (reset) st.respins = F.RESPINS; else st.respins--;
     var live = 0; st.sets.forEach(function (a) { a.forEach(function (c) { if (c.st === 'live') live++; }); });
@@ -560,7 +559,7 @@ if (typeof module !== 'undefined') module.exports = { CONFIG: CONFIG, MP: MP };
     var g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
     g.innerHTML = '<path d="' + d + '" stroke="' + col + '" stroke-width="14" stroke-linecap="round" fill="none" opacity=".25"/><path d="' + d + '" stroke="' + col + '" stroke-width="5" stroke-linecap="round" fill="none"/><path d="' + d + '" stroke="#fff" stroke-width="1.6" stroke-linecap="round" fill="none"/>' +
       '<circle cx="' + b.x + '" cy="' + b.y + '" r="' + (b.w * .45) + '" fill="none" stroke="' + col + '" stroke-width="3"/>';
-    svg.appendChild(g); var L = Math.abs(a.y - b.y) + Math.abs(a.x - b.x) + (kind === 'expand' ? 0 : b.y + 10);
+    svg.appendChild(g); var L = Math.ceil(Math.hypot(a.y - b.y, a.x - b.x) + (kind === 'expand' ? 0 : b.y + 10)) + 4;
     Array.prototype.forEach.call(g.querySelectorAll('path'), function (p) { p.style.strokeDasharray = L; p.style.strokeDashoffset = L; anim(p, [{ strokeDashoffset: L }, { strokeDashoffset: 0 }], 520, { easing: 'ease-in' }); });
     await wait(560);
     return g;
@@ -590,6 +589,9 @@ if (typeof module !== 'undefined') module.exports = { CONFIG: CONFIG, MP: MP };
         sets[e.set][e.cell] = { st: 'live' }; renderCell(e.set, e.cell, sets[e.set][e.cell]); el.classList.add('pop');
         anim(g, [{ opacity: 1 }, { opacity: 0 }], 400).then(function () { g.remove(); }); renderResp(F.RESPINS, true);
       }
+      else if (e.type === 'free') { var fe = cellEl(e.set, e.cell), fs = fe.querySelector('svg.c');
+        if (fs) await anim(fs, [{ opacity: 1, transform: 'scale(1)' }, { opacity: 0, transform: 'scale(1.35) translateY(-12%)' }], 380);
+        sets[e.set][e.cell] = { st: 'live' }; renderCell(e.set, e.cell, sets[e.set][e.cell]); }
       else if (e.type === 'noop') { var n = cellEl(e.from[0], e.from[1]); anim(n, [{ opacity: 1 }, { opacity: .4 }, { opacity: 1 }], 300); await wait(200); }
       else if (e.type === 'frontier') { S.feat.top = e.set; layoutTower(); await wait(480); }
       else if (e.type === 'grand') { $('set3').classList.add('flash'); await bigMsg('GRAND<small>+' + fm(e.x * C.BET) + '</small>', 1800); var ft = $('ftot'), f0 = S.feat.total; S.feat.total = e.total * C.BET; await tickNum(ft, f0, S.feat.total, 400); }
@@ -623,7 +625,7 @@ if (typeof module !== 'undefined') module.exports = { CONFIG: CONFIG, MP: MP };
     $('infoCard').innerHTML = '<h1>Mali Portal</h1><div>Prototype · bet ' + C.BET + ' (' + C.LINES + ' lines × ' + C.LINE_BET + ') · tap anywhere to spin, tap again to skip.</div>' +
       '<h2>Pays (credits)</h2><table>' + rows + '</table><div><svg viewBox="0 0 100 100"><use href="#s8"/></svg> Wild on reels 2–4, substitutes for all paying symbols.</div>' +
       '<h2>Pots</h2><div><b>Portal</b> (' + C.POT_CAP[0] + ' symbols) starts the Portal feature when full. <b>Expand</b> and <b>Gild</b> (' + C.POT_CAP[1] + ' each) stay charged until a feature uses them. Pot fills are saved.</div>' +
-      '<h2>Portal feature</h2><div>Four 5×3 sets. Only the bottom set spins at first; the upper sets hold locked gold weights of growing value. Coins landing on live cells stick and reset respins to 3; they are collected at the end. A Portal opens the cell directly above: its weight is collected at once and the cell starts spinning. Expand does the same for a locked cell on the same set. Gild raises the locked weights on the set above your highest open set one step (each set stays inside its own value band). Opening a cell also resets respins to 3. Reaching set IV pays the Grand (' + fm(F.GRAND_X * C.BET) + ', example value). Max win ' + fm(F.MAX_WIN_X * C.BET) + '.</div>' +
+      '<h2>Portal feature</h2><div>Four 5×3 sets. Only the bottom set spins at first; the upper sets hold locked gold weights of growing value. Coins landing on live cells stick and reset respins to 3; they are collected at the end. A Portal opens a random locked cell on the next set up: its weight is collected at once and that cell starts spinning; the Portal then leaves and its own cell spins again. Expand does the same for a random locked cell on the same set. Gild raises the locked weights on the set above your highest open set one step (each set stays inside its own value band). Opening a cell also resets respins to 3. Reaching set IV pays the Grand (' + fm(F.GRAND_X * C.BET) + ', example value). Max win ' + fm(F.MAX_WIN_X * C.BET) + '.</div>' +
       '<h2>Cheats</h2><div>Tap a pot to fill it. URL: ?bonus=1&expand=1&gild=1, ?seed=N, ?turbo=1</div>' +
       '<div><span class="btn" id="bTurbo">Turbo: ' + (TURBO ? 'on' : 'off') + '</span><span class="btn" id="bReset">Reset balance</span><span class="btn" id="bClose">Close</span></div>';
     $('bTurbo').onclick = function (e) { e.stopPropagation(); TURBO = !TURBO; this.textContent = 'Turbo: ' + (TURBO ? 'on' : 'off'); };
