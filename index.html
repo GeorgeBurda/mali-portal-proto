@@ -66,6 +66,29 @@ body.inF #fbar { display: flex; }
 #tower { display: none; position: relative; flex: 1; justify-content: center; min-height: 0; margin: 4px auto 6px; width: calc(var(--cw) * 5 + 12px); flex-direction: column; gap: 4px; }
 body.inF #tower { display: flex; }
 .set { position: relative; flex: none; display: grid; grid-template-columns: repeat(5, var(--cw)); grid-template-rows: repeat(3, var(--rh)); padding: 3px; border-radius: 5px; transition: all .45s ease; }
+/* jackpot meters (one per set) */
+.set { margin-top: 15px; }
+.jpm { position: absolute; left: 50%; top: -2px; transform: translate(-50%, -100%); z-index: 3; display: flex; align-items: center; gap: 6px; height: 15px; padding: 0 8px; border-radius: 3px 3px 0 0; white-space: nowrap;
+  font: 700 10px/15px Georgia; letter-spacing: 1px; color: #2a1806; background: linear-gradient(180deg, #f3df9e, #b8913f); box-shadow: inset 0 1px 0 rgba(255,255,255,.6), 0 -1px 6px rgba(0,0,0,.5); }
+.jpm .jv { font-weight: 800; letter-spacing: 0; font-size: 11px; }
+.jpm .sl { display: flex; gap: 3px; }
+.jpm .sl i { width: 9px; height: 9px; transform: rotate(45deg); border: 1px solid #5a3c10; background: rgba(40,25,8,.35); }
+.jpm .sl i.on { background: radial-gradient(circle, #fff7d0, #ffd34a 55%, #b8860b); box-shadow: 0 0 6px #ffe08a; border-color: #fff3c0; }
+.jpm.l0 { background: linear-gradient(180deg, #b9e3c9, #4f9a76); } .jpm.l1 { background: linear-gradient(180deg, #c9d2ff, #6f7fc6); }
+.jpm.l2 { background: linear-gradient(180deg, #ffc2a8, #c0573a); } .jpm.l3 { background: linear-gradient(180deg, #fff1bf, #e0a84a); box-shadow: 0 0 12px rgba(255,210,130,.7); }
+.jpm.hit { animation: jph .6s; } @keyframes jph { 50% { filter: brightness(1.6); transform: translate(-50%, -100%) scale(1.12); } }
+.jpm.won { animation: jpw .8s infinite alternate; } @keyframes jpw { from { filter: brightness(1); } to { filter: brightness(1.7); box-shadow: 0 0 16px #ffe08a; } }
+.cell.token svg.c { filter: drop-shadow(0 0 5px rgba(255,236,170,.9)); }
+.cell.locked.token svg.c { opacity: .9; filter: drop-shadow(0 0 3px rgba(255,236,170,.6)); animation: tkp 1.4s infinite alternate; } @keyframes tkp { from { transform: scale(.94); } to { transform: scale(1.02); } }
+/* base jackpot row */
+#jpRow { flex: none; display: flex; justify-content: center; gap: 5px; margin: 12px 8px 0; }
+body.inF #jpRow { display: none; }
+.jpb { flex: 1; max-width: 108px; display: flex; align-items: center; gap: 3px; padding: 3px 5px; border-radius: 4px; background: linear-gradient(180deg, #3b2c18, #1a130b); border: 1px solid #8a6d36; box-shadow: inset 0 1px 0 rgba(255,230,160,.2); }
+.jpb svg { width: 24px; height: 24px; flex: none; }
+.jpb div { display: flex; flex-direction: column; line-height: 1.1; min-width: 0; }
+.jpb b { font: 700 9px Georgia; letter-spacing: 1px; color: #cbb88e; }
+.jpb span { font: 800 12.5px Georgia; color: var(--gold2); white-space: nowrap; }
+.jpb.l3 { border-color: #f3d98a; box-shadow: 0 0 10px rgba(243,217,138,.35); }
 .set .lv { position: absolute; left: -3px; top: 50%; transform: translate(-100%, -50%); font: 700 9px Georgia; color: rgba(243,217,138,.5); writing-mode: vertical-rl; letter-spacing: 1px; }
 .set[data-k="0"] { background: linear-gradient(180deg, #e6d6b6, #cdb88f); box-shadow: inset 0 0 0 1px #fff3d0, 0 0 0 2px #8a6d36, 0 0 22px rgba(255,170,60,.35); }
 .set[data-k="1"] { background: linear-gradient(180deg, #24306a, #18204a); box-shadow: inset 0 0 0 1px #4a5aa0, 0 0 0 2px #5a4a2a; }
@@ -93,7 +116,7 @@ body.inF #tower { display: flex; }
 @keyframes cpop { 0% { transform: scale(.4); } 70% { transform: scale(1.15); } 100% { transform: scale(1); } }
 .cell.flash { animation: cfl .5s; }
 @keyframes cfl { 50% { filter: brightness(2.2); } }
-#grandP { position: absolute; left: 50%; top: -2px; transform: translate(-50%, -100%); font: 800 10px/1 Georgia; letter-spacing: 2px; color: #2a1806; background: linear-gradient(180deg, #fff1bf, #c9a55a); padding: 2px 8px; border-radius: 3px; box-shadow: 0 0 10px rgba(255,210,130,.6); white-space: nowrap; z-index: 3; }
+#grandPx { position: absolute; left: 50%; top: -2px; transform: translate(-50%, -100%); font: 800 10px/1 Georgia; letter-spacing: 2px; color: #2a1806; background: linear-gradient(180deg, #fff1bf, #c9a55a); padding: 2px 8px; border-radius: 3px; box-shadow: 0 0 10px rgba(255,210,130,.6); white-space: nowrap; z-index: 3; }
 #beams { position: absolute; left: 0; top: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; z-index: 4; }
 /* overlays */
 #fx { position: absolute; inset: 0; pointer-events: none; z-index: 20; }
@@ -183,6 +206,11 @@ body.inF #tower { display: flex; }
     <symbol id="w3" viewBox="0 0 100 100"><path d="M50 8 L86 29 V71 L50 92 L14 71 V29Z" fill="url(#gGd)" stroke="#3a2210" stroke-width="3"/><path d="M50 18 L77 34 V66 L50 82 L23 66 V34Z" fill="none" stroke="#fff0b8" stroke-width="1.6" opacity=".7"/></symbol>
     <symbol id="w4" viewBox="0 0 100 100"><path d="M50 4 L61 30 L90 26 L70 48 L90 74 L61 70 L50 96 L39 70 L10 74 L30 48 L10 26 L39 30Z" fill="url(#gG)" stroke="#3a2210" stroke-width="3"/><circle cx="50" cy="50" r="24" fill="url(#gGd)" stroke="#fff0b8" stroke-width="1.5"/></symbol>
     <symbol id="w5" viewBox="0 0 100 100"><path d="M50 2 L62 28 L92 24 L72 48 L92 76 L62 72 L50 98 L38 72 L8 76 L28 48 L8 24 L38 28Z" fill="#fff4c4" stroke="#b8892e" stroke-width="3"/><circle cx="50" cy="50" r="26" fill="url(#gG)" stroke="#fff" stroke-width="2"/></symbol>
+    <!-- jackpot tokens: enamel seals, one per level (I Mini malachite, II Maxi indigo, III Major carnelian, IV Grand dawn gold) -->
+    <symbol id="tk0" viewBox="0 0 100 100"><circle cx="50" cy="50" r="44" fill="url(#gBr)" stroke="#3a2210" stroke-width="3"/><circle cx="50" cy="50" r="33" fill="#2f8a62" stroke="#c9f0d8" stroke-width="2"/><path d="M50 24 L56 44 L76 44 L60 56 L66 76 L50 64 L34 76 L40 56 L24 44 L44 44Z" fill="#e9fff2" opacity=".9"/><text x="50" y="94" text-anchor="middle" font-family="Georgia" font-weight="800" font-size="13" fill="#fff" stroke="#000" stroke-width=".6">MINI</text></symbol>
+    <symbol id="tk1" viewBox="0 0 100 100"><circle cx="50" cy="50" r="44" fill="#dfe4f2" stroke="#3a3f5a" stroke-width="3"/><circle cx="50" cy="50" r="33" fill="#2b3a9a" stroke="#c9d2ff" stroke-width="2"/><path d="M50 22 L60 42 L80 50 L60 58 L50 78 L40 58 L20 50 L40 42Z" fill="#eef1ff"/><text x="50" y="94" text-anchor="middle" font-family="Georgia" font-weight="800" font-size="13" fill="#fff" stroke="#000" stroke-width=".6">MAXI</text></symbol>
+    <symbol id="tk2" viewBox="0 0 100 100"><circle cx="50" cy="50" r="44" fill="url(#gG)" stroke="#5a3c10" stroke-width="3"/><circle cx="50" cy="50" r="33" fill="#b8402a" stroke="#ffd2c0" stroke-width="2"/><path d="M50 20 L58 38 L78 34 L66 50 L78 66 L58 62 L50 80 L42 62 L22 66 L34 50 L22 34 L42 38Z" fill="#fff0e6"/><text x="50" y="94" text-anchor="middle" font-family="Georgia" font-weight="800" font-size="12" fill="#fff" stroke="#000" stroke-width=".6">MAJOR</text></symbol>
+    <symbol id="tk3" viewBox="0 0 100 100"><path d="M50 2 L58 20 L76 10 L74 30 L94 30 L82 46 L98 58 L78 64 L84 84 L64 78 L56 98 L48 80 L30 92 L30 72 L10 70 L22 54 L6 40 L26 34 L22 14 L40 22Z" fill="url(#gG)" stroke="#7a5a1a" stroke-width="2"/><circle cx="50" cy="50" r="28" fill="url(#gDawn)" stroke="#fff3c0" stroke-width="2.5"/><path d="M30 60 L38 46 L44 54 L52 38 L62 54 L68 48 L72 60Z" fill="#5a3418"/><text x="50" y="94" text-anchor="middle" font-family="Georgia" font-weight="800" font-size="12" fill="#fff" stroke="#000" stroke-width=".6">GRAND</text></symbol>
   </defs>
 </svg>
 <div id="app">
@@ -191,6 +219,7 @@ body.inF #tower { display: flex; }
   <div id="fbar"><div id="resp"></div><div id="fheld"></div><div id="ftot">0</div></div>
   <div id="stage"><div id="reels"></div><svg id="lines"></svg></div>
   <div id="tower"><svg id="beams"></svg></div>
+  <div id="jpRow"></div>
   <div id="cap"></div>
   <div id="hint">Tap to spin</div>
   <div id="fx"></div>
@@ -219,12 +248,16 @@ var CONFIG = {
     [30, 34, 40, 46, 70, 76, 82, 88, 0, 3.2, 1, 1]],
   POT_CAP: [15, 12, 12],          // Portal pot triggers the feature when full; Expand / Gild pots stay charged until a feature uses them
   FEATURE: {
-    RESPINS: 3, SETS: 4, MAX_WIN_X: 5000, GRAND_X: 1000,      // Grand = example value (x bet), awarded when the first cell of set 4 opens
+    RESPINS: 3, SETS: 4, MAX_WIN_X: 5000,
+    // jackpots: one per set (I Mini, II Maxi, III Major, IV Grand). 3 tokens of a set's level win it, once per feature. Values x bet (examples); Grand is progressive
+    JP_NAMES: ['MINI', 'MAXI', 'MAJOR', 'GRAND'], JP_X: [10, 30, 150], GRAND_SEED: 1000, GRAND_INC: 0.01,   // Grand grows by 1% of bet per base spin
+    P_TOKEN: [0.009, 0.02, 0.05, 0.2],       // token chance per live cell per respin (by set)
+    TOK_LOCKED: [0, 2, 3, 6],                 // locked cells per upper set that hide a token instead of a coin (revealed when unlocked)
     // per-set value ladders (x bet). Coins draw ranks 0..4; Gild moves a locked coin one rank up (rank 5) -> every set stays inside its own band
     LADDER: [[1, 2, 3, 4, 5, 5], [5, 8, 10, 12, 15, 20], [20, 25, 30, 40, 50, 70], [80, 100, 150, 200, 300, 500]],
-    TIER_W: [[55, 25, 11, 6, 3], [50, 25, 13, 8, 4], [50, 25, 13, 8, 4], [45, 25, 15, 10, 5]],
+    TIER_W: [[25, 25, 20, 15, 15], [45, 25, 15, 10, 5], [50, 25, 13, 8, 4], [45, 25, 15, 10, 5]],
     // per live cell per respin: coin / portal / expand chances by set (index 0 = bottom); coins are sticky and reset respins
-    P_COIN: [0.045, 0.03, 0.03, 0.05], P_PORTAL: [0.0115, 0.019, 0.006, 0], P_EXPAND: [0, 0.012, 0.012, 0.012]
+    P_COIN: [0.034, 0.05, 0.05, 0.06], P_PORTAL: [0.0125, 0.023, 0.01, 0], P_EXPAND: [0, 0.012, 0.012, 0.012]
   },
   PAYLINES: null
 };
@@ -270,23 +303,31 @@ var MP = (function () {
   // cells: sets[k][i], i = x*3+y ; {st:'locked'|'live'|'held', v (x bet), kind:'coin'|'portal'|'expand', gild}
   function newFeature(mods, rng) {
     var sets = [];
-    for (var k = 0; k < F.SETS; k++) { var a = []; for (var i = 0; i < 15; i++) { if (k === 0) a.push({ st: 'live' }); else { var r = wpick(rng, F.TIER_W[k]); a.push({ st: 'locked', v: F.LADDER[k][r], r: r, t: k }); } } sets.push(a); }
-    return { mods: { expand: !!mods.expand, gild: !!mods.gild }, sets: sets, respins: F.RESPINS, total: 0, held: 0, grand: 0, spins: 0, top: 0, gilded: [false, false, false, false], opens: 0, done: false, capped: false };
+    for (var k = 0; k < F.SETS; k++) { var a = [];
+      for (var i = 0; i < 15; i++) { if (k === 0) a.push({ st: 'live' }); else { var r = wpick(rng, F.TIER_W[k]); a.push({ st: 'locked', v: F.LADDER[k][r], r: r, t: k }); } }
+      for (var n = 0; n < F.TOK_LOCKED[k]; n++) { var j; do { j = rint(rng, 15); } while (a[j].kind === 'token'); a[j] = { st: 'locked', kind: 'token', v: 0, t: k }; }
+      sets.push(a); }
+    return { mods: { expand: !!mods.expand, gild: !!mods.gild }, sets: sets, respins: F.RESPINS, total: 0, held: 0, grand: 0, grandX: F.GRAND_SEED, tokens: [0, 0, 0, 0], jpWon: [false, false, false, false], jp: 0, jpList: [], spins: 0, top: 0, gilded: [false, false, false, false], opens: 0, done: false, capped: false };
   }
   function cp(c) { return Object.assign({}, c); }
   function snap(st) { return st.sets.map(function (a) { return a.map(cp); }); }
   function addWin(st, x) { st.total += x; if (st.total + st.held >= F.MAX_WIN_X) st.capped = true; }
   function gildSet(st, k, ev) { // all still-locked coins of set k move one tier up (same rank)
     if (k >= F.SETS || st.gilded[k] || !st.mods.gild) return; st.gilded[k] = true; var cells = [];
-    st.sets[k].forEach(function (c, i) { if (c.st === 'locked') { c.r += 1; c.v = F.LADDER[k][c.r]; c.gild = true; cells.push([i, c.v, c.t]); } });
+    st.sets[k].forEach(function (c, i) { if (c.st === 'locked' && c.kind !== 'token') { c.r += 1; c.v = F.LADDER[k][c.r]; c.gild = true; cells.push([i, c.v, c.t]); } });
     ev.push({ type: 'gild', set: k, cells: cells });
+  }
+  function addToken(st, k, i, ev, how) {
+    if (st.jpWon[k]) { ev.push({ type: 'token', set: k, cell: i, n: 3, dead: true, how: how }); return; }
+    st.tokens[k]++; ev.push({ type: 'token', set: k, cell: i, n: st.tokens[k], how: how });
+    if (st.tokens[k] >= 3) { var x = k < 3 ? F.JP_X[k] : st.grandX; st.jpWon[k] = true; st.jp += x; st.jpList.push(F.JP_NAMES[k]); if (k === 3) st.grand = x; addWin(st, x); ev.push({ type: 'jackpot', set: k, level: F.JP_NAMES[k], x: x, total: st.total }); }
   }
   function open(st, k, i, ev, how, from) {
     var c = st.sets[k][i]; if (c.st !== 'locked') { ev.push({ type: 'noop', set: k, cell: i, how: how, from: from }); return false; }
-    c.st = 'live'; st.opens++; addWin(st, c.v);
-    ev.push({ type: 'open', set: k, cell: i, v: c.v, how: how, from: from, total: st.total });
+    var tok = c.kind === 'token'; st.sets[k][i] = { st: 'live' }; st.opens++; if (!tok) addWin(st, c.v);
+    ev.push({ type: 'open', set: k, cell: i, v: c.v, token: tok, how: how, from: from, total: st.total });
+    if (tok) addToken(st, k, i, ev, 'reveal');
     if (k > st.top) { st.top = k; ev.push({ type: 'frontier', set: k });
-      if (k === 3 && !st.grand) { st.grand = F.GRAND_X; addWin(st, F.GRAND_X); ev.push({ type: 'grand', x: F.GRAND_X, total: st.total }); }
       gildSet(st, k + 1, ev); }
     return true;
   }
@@ -295,7 +336,9 @@ var MP = (function () {
     var ev = [], reset = false, landed = []; st.spins++;
     for (var k = 0; k < F.SETS; k++) for (var i = 0; i < 15; i++) {
       var c = st.sets[k][i]; if (c.st !== 'live') continue;
-      var r = rng.next(), pc = F.P_COIN[k], pp = F.P_PORTAL[k], pe = st.mods.expand ? F.P_EXPAND[k] : 0;
+      var r = rng.next(), pt = st.jpWon[k] ? 0 : F.P_TOKEN[k], pc = F.P_COIN[k], pp = F.P_PORTAL[k], pe = st.mods.expand ? F.P_EXPAND[k] : 0;
+      if (r < pt) { c.st = 'held'; c.kind = 'token'; c.t = k; landed.push([k, i]); continue; }
+      r -= pt;
       if (r < pc) { var rr = wpick(rng, F.TIER_W[k]); c.st = 'held'; c.kind = 'coin'; c.v = F.LADDER[k][rr]; c.t = k; landed.push([k, i]); }
       else if (r < pc + pp) { c.st = 'held'; c.kind = 'portal'; landed.push([k, i]); }
       else if (r < pc + pp + pe) { c.st = 'held'; c.kind = 'expand'; landed.push([k, i]); }
@@ -308,6 +351,7 @@ var MP = (function () {
     landed.forEach(function (q) { var k = q[0], i = q[1], c = st.sets[k][i];
       if (st.capped) return;
       if (c.kind === 'coin') { st.held += c.v; reset = true; if (st.total + st.held >= F.MAX_WIN_X) st.capped = true; }
+      else if (c.kind === 'token') { reset = true; addToken(st, k, i, ev, 'land'); }
       else if (c.kind === 'portal' || c.kind === 'expand') { // non-blocking: opens a random still-locked cell (next set up / same set), then leaves its own cell free
         var tk = c.kind === 'portal' ? k + 1 : k, j = tk < F.SETS ? randomLocked(st, tk, rng) : -1;
         if (j >= 0) { open(st, tk, j, ev, c.kind, [k, i]); reset = true; } else ev.push({ type: 'noop', set: k, cell: i, how: c.kind, from: [k, i] });
@@ -327,12 +371,12 @@ var MP = (function () {
     }
     return ev;
   }
-  function runFeature(mods, rng, record) {
-    var st = newFeature(mods, rng), steps = [], ev0 = [], init = record ? snap(st) : null;
+  function runFeature(mods, rng, record, grandX) {
+    var st = newFeature(mods, rng), steps = [], ev0 = [], init = record ? snap(st) : null; if (grandX) st.grandX = grandX;
     gildSet(st, 1, ev0);
     if (record) steps.push({ ev: ev0, after: snap(st) });
     while (!st.done) { var ev = spinStep(st, rng); if (record) steps.push({ ev: ev, after: snap(st), respins: st.respins, total: st.total }); }
-    return { win: Math.round(st.total * C.BET), totalX: st.total, top: st.top, spins: st.spins, grand: st.grand, opens: st.opens, steps: steps, init: init, mods: st.mods, capped: st.capped, reason: st.reason };
+    return { win: Math.round(st.total * C.BET), totalX: st.total, top: st.top, spins: st.spins, grand: st.grand, grandX: st.grandX, jp: st.jp, jpList: st.jpList, tokens: st.tokens, opens: st.opens, steps: steps, init: init, mods: st.mods, capped: st.capped, reason: st.reason };
   }
   return { mulberry32: mulberry32, wpick: wpick, evalLines: evalLines, spinBase: spinBase, runFeature: runFeature, newFeature: newFeature, pay: pay };
 })();
@@ -349,14 +393,16 @@ if (typeof module !== 'undefined') module.exports = { CONFIG: CONFIG, MP: MP };
   var rng = MP.mulberry32(SEED !== null ? SEED : (Math.random() * 4294967296) >>> 0);
   var TURBO = qs.get('turbo') === '1';
   var POTN = ['PORTAL', 'EXPAND', 'GILD'], POTCOL = ['#f3d98a', '#6f86ff', '#ffd76a'];
-  var S = { balance: C.START_BALANCE, lastWin: 0, pots: [0, 0, 0], mode: '', busy: false, pending: null, feat: null, lastRes: null, spins: 0 };
+  var S = { balance: C.START_BALANCE, lastWin: 0, pots: [0, 0, 0], mode: '', busy: false, pending: null, feat: null, lastRes: null, spins: 0, grand: F.GRAND_SEED * C.BET };
+  var JPN = F.JP_NAMES;
+  function jpVal(k, grandCr) { return k < 3 ? F.JP_X[k] * C.BET : grandCr; }
   function fm(x) { return Math.round(x).toLocaleString('en-US'); }
   function fk(cr) { return cr >= 10000 ? (cr % 1000 === 0 ? (cr / 1000) + 'K' : (cr / 1000).toFixed(1) + 'K') : fm(cr); } // compact credits
   // ---------- persistence ----------
-  function save() { try { localStorage.setItem(C.STORAGE_KEY, JSON.stringify({ balance: S.balance, pots: S.pots, pending: S.pending })); } catch (e) {} }
+  function save() { try { localStorage.setItem(C.STORAGE_KEY, JSON.stringify({ balance: S.balance, pots: S.pots, pending: S.pending, grand: S.grand })); } catch (e) {} }
   function load() {
     try { var d = JSON.parse(localStorage.getItem(C.STORAGE_KEY) || 'null');
-      if (d) { S.balance = +d.balance || 0; if (d.pots && d.pots.length === 3) S.pots = d.pots.map(Number);
+      if (d) { S.balance = +d.balance || 0; if (d.pots && d.pots.length === 3) S.pots = d.pots.map(Number); if (+d.grand >= F.GRAND_SEED * C.BET) S.grand = +d.grand;
         if (d.pending && d.pending.win > 0) { S.balance += d.pending.win; setTimeout(function () { toast('Unfinished feature credited: +' + fm(d.pending.win)); }, 400); } } } catch (e) {}
     S.pending = null;
     if (qs.get('bonus') === '1') { S.pots[0] = C.POT_CAP[0]; if (qs.get('expand') === '1') S.pots[1] = C.POT_CAP[1]; if (qs.get('gild') === '1') S.pots[2] = C.POT_CAP[2]; }
@@ -388,15 +434,15 @@ if (typeof module !== 'undefined') module.exports = { CONFIG: CONFIG, MP: MP };
     var app = $('app'), W = app.clientWidth, H = app.clientHeight, inF = document.body.classList.contains('inF'), r = document.documentElement.style;
     if (!inF) {
       var pots = Math.round(Math.max(96, Math.min(H * 0.21, 170)));
-      CELL = Math.floor(Math.max(48, Math.min((W - 24) / 5, (H - 30 - pots - 26 - 6 - 30 - 30) / 3, 96)));
-      var gap = Math.max(10, Math.min(70, (H - 30 - pots - CELL * 3 - 14 - 70) * 0.6));
+      CELL = Math.floor(Math.max(48, Math.min((W - 24) / 5, (H - 30 - pots - 26 - 6 - 30 - 30 - 48) / 3, 96)));
+      var gap = Math.max(8, Math.min(60, (H - 30 - pots - CELL * 3 - 14 - 70 - 48) * 0.5));
       r.setProperty('--pots', pots + 'px'); r.setProperty('--cell', CELL + 'px'); r.setProperty('--gap', Math.round(gap) + 'px');
     } else { r.setProperty('--pots', '58px'); layoutTower(); }
   }
   function layoutTower() {
     if (!S.feat || !$('set0')) return; var tw = $('tower'), W = $('app').clientWidth, front = S.feat.top;
     var cw = Math.floor(Math.min((W - 30) / 5, 84)); document.documentElement.style.setProperty('--cw', cw + 'px');
-    var Ht = tw.clientHeight - 3 * 4 - 4 * 6 - 14, w = [];
+    var Ht = tw.clientHeight - 3 * 4 - 4 * 6 - 4 * 15, w = [];
     for (var k = 0; k < 4; k++) w.push(k === 0 ? 1 : k === front ? 0.95 : k === front + 1 ? 0.78 : 0.5);
     var capH = [cw, cw * .9, cw * .9, cw * .9], fixed = [0, 0, 0, 0], rhs = [0, 0, 0, 0];
     for (var it = 0; it < 4; it++) { var free = Ht, sw = 0; for (k = 0; k < 4; k++) { if (fixed[k]) free -= 3 * rhs[k]; else sw += w[k]; }
@@ -484,7 +530,9 @@ if (typeof module !== 'undefined') module.exports = { CONFIG: CONFIG, MP: MP };
     setBusy(true); setMode('spinning'); SKIP = false; cap(''); $('hint').style.opacity = 0;
     var res = MP.spinBase(rng, S.pots, null); S.spins++; S.lastRes = res;
     S.balance = S.balance - C.BET + res.total; S.lastWin = res.total;
-    var run = null; if (res.trigger) { run = MP.runFeature(res.trigger, rng, true); S.pending = { win: run.win }; }
+    S.grand += Math.round(F.GRAND_INC * C.BET);  // progressive Grand grows every base spin
+    var run = null; if (res.trigger) { run = MP.runFeature(res.trigger, rng, true, S.grand / C.BET); S.pending = { win: run.win }; if (run.grand) S.grand = F.GRAND_SEED * C.BET; }
+    renderJP(run ? Math.round(run.grandX * C.BET) : S.grand);
     S.pots = res.pots; save();
     renderTop(S.balance - res.total, 0);
     await spinReels(res);
@@ -506,25 +554,26 @@ if (typeof module !== 'undefined') module.exports = { CONFIG: CONFIG, MP: MP };
     p.classList.remove('boil'); g.innerHTML = '';
     S.feat = { run: run, step: 0, top: 0, total: 0, sets: run.init };
     var m = run.mods;
-    $('introCard').innerHTML = '<h1>PORTAL</h1><svg viewBox="0 0 100 100" style="width:72px;height:72px"><use href="#s9"/></svg><div class="row"><span class="chip ' + (m.expand ? 'on' : '') + '">EXPAND</span><span class="chip ' + (m.gild ? 'on' : '') + '">GILD</span></div><div class="row" style="opacity:.75">GRAND ' + fm(F.GRAND_X * C.BET) + '</div><div class="tapc">Tap</div>';
+    $('introCard').innerHTML = '<h1>PORTAL</h1><svg viewBox="0 0 100 100" style="width:72px;height:72px"><use href="#s9"/></svg><div class="row"><span class="chip ' + (m.expand ? 'on' : '') + '">EXPAND</span><span class="chip ' + (m.gild ? 'on' : '') + '">GILD</span></div><div class="row" style="opacity:.8">' + [0, 1, 2, 3].map(function (k) { return JPN[k] + ' ' + fk(jpVal(k, Math.round(run.grandX * C.BET))); }).join(' · ') + '</div><div class="tapc">Tap</div>';
     $('ovIntro').classList.add('on'); setMode('featIntro'); setBusy(false);
   }
   function coinSVG(t) { return '<svg class="c" viewBox="0 0 100 100"><use href="#w' + (t + 1) + '"/></svg>'; }
   function cellHTML(c, k) {
     if (c.st === 'live') return '';
+    if (c.kind === 'token') return '<svg class="c" viewBox="0 0 100 100"><use href="#tk' + c.t + '"/></svg>';
     if (c.st === 'locked') return coinSVG(c.t) + '<span class="v">' + fk(c.v * C.BET) + '</span>';
     if (c.kind === 'coin') return coinSVG(k) + '<span class="v">' + fk(c.v * C.BET) + '</span>';
     return '<svg class="c" viewBox="0 0 100 100"><use href="#s' + (c.kind === 'portal' ? 9 : 10) + '"/></svg>';
   }
   function cellEl(k, i) { return $('c' + k + '_' + i); }
-  function renderCell(k, i, c) { var e = cellEl(k, i); e.className = 'cell ' + c.st + (c.st === 'held' && c.kind === 'coin' ? ' coin' : '') + (c.gild && c.st === 'locked' ? ' gild' : ''); e.innerHTML = cellHTML(c, k); }
+  function renderCell(k, i, c) { var e = cellEl(k, i); e.className = 'cell ' + c.st + (c.st === 'held' && c.kind === 'coin' ? ' coin' : '') + (c.kind === 'token' ? ' token' : '') + (c.dead ? ' dead' : '') + (c.gild && c.st === 'locked' ? ' gild' : ''); e.innerHTML = cellHTML(c, k); }
   function buildTower() {
     var tw = $('tower'); Array.prototype.slice.call(tw.querySelectorAll('.set')).forEach(function (e) { e.remove(); });
-    var gp = $('grandP'); if (gp) gp.remove();
     for (var k = 3; k >= 0; k--) { var s = document.createElement('div'); s.className = 'set'; s.id = 'set' + k; s.dataset.k = k;
       for (var y = 0; y < 3; y++) for (var x = 0; x < 5; x++) { var i = x * 3 + y, d = document.createElement('div'); d.id = 'c' + k + '_' + i; d.className = 'cell'; d.style.gridColumn = (x + 1); d.style.gridRow = (y + 1); s.appendChild(d); }
       tw.insertBefore(s, $('beams')); }
-    var g = document.createElement('div'); g.id = 'grandP'; g.textContent = 'GRAND ' + fm(F.GRAND_X * C.BET); $('set3').appendChild(g);
+    for (k = 0; k < 4; k++) { var m = document.createElement('div'); m.className = 'jpm l' + k; m.id = 'jpm' + k;
+      m.innerHTML = '<b>' + JPN[k] + '</b><span class="jv">' + fm(jpVal(k, Math.round(S.feat.run.grandX * C.BET))) + '</span><span class="sl"><i></i><i></i><i></i></span>'; $('set' + k).appendChild(m); }
     var sets = S.feat.sets; for (k = 0; k < 4; k++) for (var j = 0; j < 15; j++) renderCell(k, j, sets[k][j]);
   }
   function renderResp(n, reset) { var h = ''; for (var i = 0; i < F.RESPINS; i++) h += '<i class="' + (i < n ? 'on' : '') + '"></i>'; var r = $('resp'); r.innerHTML = h; r.classList.remove('reset'); if (reset) { void r.offsetWidth; r.classList.add('reset'); } }
@@ -585,8 +634,7 @@ if (typeof module !== 'undefined') module.exports = { CONFIG: CONFIG, MP: MP };
       if (e.type === 'collectEnd') { await endCollect(e); }
       else if (e.type === 'open') {
         var g = await beam(e.from, [e.set, e.cell], e.how), el = cellEl(e.set, e.cell), v = e.v;
-        el.classList.add('flash'); await collectTo(el, v * C.BET, e.total);
-        sets[e.set][e.cell] = { st: 'live' }; renderCell(e.set, e.cell, sets[e.set][e.cell]); el.classList.add('pop');
+        el.classList.add('flash'); if (!e.token) { await collectTo(el, v * C.BET, e.total); sets[e.set][e.cell] = { st: 'live' }; renderCell(e.set, e.cell, sets[e.set][e.cell]); el.classList.add('pop'); }
         anim(g, [{ opacity: 1 }, { opacity: 0 }], 400).then(function () { g.remove(); }); renderResp(F.RESPINS, true);
       }
       else if (e.type === 'free') { var fe = cellEl(e.set, e.cell), fs = fe.querySelector('svg.c');
@@ -594,7 +642,16 @@ if (typeof module !== 'undefined') module.exports = { CONFIG: CONFIG, MP: MP };
         sets[e.set][e.cell] = { st: 'live' }; renderCell(e.set, e.cell, sets[e.set][e.cell]); }
       else if (e.type === 'noop') { var n = cellEl(e.from[0], e.from[1]); anim(n, [{ opacity: 1 }, { opacity: .4 }, { opacity: 1 }], 300); await wait(200); }
       else if (e.type === 'frontier') { S.feat.top = e.set; layoutTower(); await wait(480); }
-      else if (e.type === 'grand') { $('set3').classList.add('flash'); await bigMsg('GRAND<small>+' + fm(e.x * C.BET) + '</small>', 1800); var ft = $('ftot'), f0 = S.feat.total; S.feat.total = e.total * C.BET; await tickNum(ft, f0, S.feat.total, 400); }
+      else if (e.type === 'token') { var te = cellEl(e.set, e.cell), mt = $('jpm' + e.set);
+        if (e.how === 'reveal') { sets[e.set][e.cell] = { st: 'live' }; }
+        if (e.dead) { anim(te, [{ opacity: 1 }, { opacity: .4 }, { opacity: 1 }], 300); await wait(150); }
+        else { var slot = mt.querySelectorAll('.sl i')[e.n - 1], tr = rect(te), sr = rect(slot), d = document.createElement('div'); d.className = 'fly'; d.innerHTML = '<svg viewBox="0 0 100 100"><use href="#tk' + e.set + '"/></svg>'; d.style.left = tr.x + 'px'; d.style.top = tr.y + 'px'; $('fx').appendChild(d);
+          await anim(d, [{ transform: 'translate(0,0) scale(1)', opacity: 1 }, { transform: 'translate(' + (sr.x - tr.x) + 'px,' + (sr.y - tr.y) + 'px) scale(.35)', opacity: .9 }], 420, { easing: 'ease-in' }); d.remove();
+          slot.classList.add('on'); anim(slot, [{ transform: 'scale(2)' }, { transform: 'scale(1)' }], 300); mt.classList.remove('hit'); void mt.offsetWidth; mt.classList.add('hit'); }
+        if (e.how === 'reveal') { renderCell(e.set, e.cell, sets[e.set][e.cell]); }
+      }
+      else if (e.type === 'jackpot') { var jm = $('jpm' + e.set); jm.classList.add('won'); $('set' + e.set).classList.add('flash');
+        await bigMsg(e.level + '<small>+' + fm(e.x * C.BET) + '</small>', 1900); var ft = $('ftot'), f0 = S.feat.total; S.feat.total = e.total * C.BET; await tickNum(ft, f0, S.feat.total, 500); }
       else if (e.type === 'gild') {
         var setEl = $('set' + e.set); anim(setEl, [{ filter: 'brightness(1)' }, { filter: 'brightness(2.2) sepia(.6)' }, { filter: 'brightness(1)' }], 700);
         e.cells.forEach(function (q, n) { var c = sets[e.set][q[0]]; c.v = q[1]; c.gild = true; setTimeout(function () { renderCell(e.set, q[0], c); cellEl(e.set, q[0]).classList.add('pop'); }, dur(120 + n * 25)); });
@@ -607,25 +664,28 @@ if (typeof module !== 'undefined') module.exports = { CONFIG: CONFIG, MP: MP };
   function showSummary() {
     var run = S.feat.run, names = ['I', 'II', 'III', 'IV'], m = run.mods;
     $('sumCard').innerHTML = '<h1>PORTAL</h1><div class="big">+' + fm(run.win) + '</div><div class="row">' + names.map(function (n, k) { return '<span class="chip ' + (k <= run.top ? 'on' : '') + '">' + n + '</span>'; }).join('') + '</div>' +
-      '<div class="row"><span class="chip ' + (m.expand ? 'on' : '') + '">EXPAND</span><span class="chip ' + (m.gild ? 'on' : '') + '">GILD</span>' + (run.grand ? '<span class="chip on">GRAND</span>' : '') + (run.capped ? '<span class="chip on">MAX WIN</span>' : '') + '</div><div class="tapc">Tap to collect</div>';
+      '<div class="row"><span class="chip ' + (m.expand ? 'on' : '') + '">EXPAND</span><span class="chip ' + (m.gild ? 'on' : '') + '">GILD</span>' + run.jpList.map(function (n) { return '<span class="chip on">' + n + '</span>'; }).join('') + (run.capped ? '<span class="chip on">MAX WIN</span>' : '') + '</div><div class="tapc">Tap to collect</div>';
     $('ovSum').classList.add('on'); setMode('summary'); setBusy(false);
   }
   async function collect() {
     setBusy(true); $('ovSum').classList.remove('on'); var w = S.feat.run.win, b0 = S.balance;
     S.balance += w; S.lastWin = w; S.pending = null; save();
     document.body.classList.remove('inF'); for (var i = 1; i < 3; i++) $('pot' + i).classList.remove('off');
-    $('beams').innerHTML = ''; S.feat = null; layout(); renderPots();
+    $('beams').innerHTML = ''; S.feat = null; layout(); renderPots(); renderJP(S.grand);
     cap('Portal win ' + fm(w)); await tickNum($('bal'), b0, S.balance, 600); renderTop();
     setMode('idle'); setBusy(false);
   }
 
+  // ---------- jackpot row (base game) ----------
+  function buildJP() { $('jpRow').innerHTML = [0, 1, 2, 3].map(function (k) { return '<div class="jpb l' + k + '"><svg viewBox="0 0 100 100"><use href="#tk' + k + '"/></svg><div><b>' + JPN[k] + '</b><span id="jpv' + k + '"></span></div></div>'; }).join(''); renderJP(S.grand); }
+  function renderJP(g) { for (var k = 0; k < 4; k++) $('jpv' + k).textContent = fm(jpVal(k, g)); }
   // ---------- info ----------
   function buildInfo() {
     var rows = ''; for (var s = 0; s < 8; s++) rows += '<tr><td><svg viewBox="0 0 100 100"><use href="#s' + s + '"/></svg> ' + C.NAMES[s] + '</td><td>' + [3, 4, 5].map(function (k) { return k + ': ' + fm(MP.pay(s, k)); }).join(' · ') + '</td></tr>';
     $('infoCard').innerHTML = '<h1>Mali Portal</h1><div>Prototype · bet ' + C.BET + ' (' + C.LINES + ' lines × ' + C.LINE_BET + ') · tap anywhere to spin, tap again to skip.</div>' +
       '<h2>Pays (credits)</h2><table>' + rows + '</table><div><svg viewBox="0 0 100 100"><use href="#s8"/></svg> Wild on reels 2–4, substitutes for all paying symbols.</div>' +
       '<h2>Pots</h2><div><b>Portal</b> (' + C.POT_CAP[0] + ' symbols) starts the Portal feature when full. <b>Expand</b> and <b>Gild</b> (' + C.POT_CAP[1] + ' each) stay charged until a feature uses them. Pot fills are saved.</div>' +
-      '<h2>Portal feature</h2><div>Four 5×3 sets. Only the bottom set spins at first; the upper sets hold locked gold weights of growing value. Coins landing on live cells stick and reset respins to 3; they are collected at the end. A Portal opens a random locked cell on the next set up: its weight is collected at once and that cell starts spinning; the Portal then leaves and its own cell spins again. Expand does the same for a random locked cell on the same set. Gild raises the locked weights on the set above your highest open set one step (each set stays inside its own value band). Opening a cell also resets respins to 3. Reaching set IV pays the Grand (' + fm(F.GRAND_X * C.BET) + ', example value). Max win ' + fm(F.MAX_WIN_X * C.BET) + '.</div>' +
+      '<h2>Portal feature</h2><div>Four 5×3 sets. Only the bottom set spins at first; the upper sets hold locked gold weights of growing value. Coins landing on live cells stick and reset respins to 3; they are collected at the end. A Portal opens a random locked cell on the next set up: its weight is collected at once and that cell starts spinning; the Portal then leaves and its own cell spins again. Expand does the same for a random locked cell on the same set. Gild raises the locked weights on the set above your highest open set one step (each set stays inside its own value band). Opening a cell also resets respins to 3.</div><h2>Jackpots</h2><div>Each set has its own jackpot: I Mini (' + fm(F.JP_X[0] * C.BET) + '), II Maxi (' + fm(F.JP_X[1] * C.BET) + '), III Major (' + fm(F.JP_X[2] * C.BET) + '), IV Grand (progressive from ' + fm(F.GRAND_SEED * C.BET) + ', +' + Math.round(F.GRAND_INC * C.BET) + ' per base spin). Jackpot tokens land on live cells of their set and stick (resetting respins); some locked cells on the upper sets hide a token that counts when the cell is unlocked. 3 tokens of a set win its jackpot, once per feature. Values are examples. Max win ' + fm(F.MAX_WIN_X * C.BET) + '.</div>' +
       '<h2>Cheats</h2><div>Tap a pot to fill it. URL: ?bonus=1&expand=1&gild=1, ?seed=N, ?turbo=1</div>' +
       '<div><span class="btn" id="bTurbo">Turbo: ' + (TURBO ? 'on' : 'off') + '</span><span class="btn" id="bReset">Reset balance</span><span class="btn" id="bClose">Close</span></div>';
     $('bTurbo').onclick = function (e) { e.stopPropagation(); TURBO = !TURBO; this.textContent = 'Turbo: ' + (TURBO ? 'on' : 'off'); };
@@ -644,7 +704,7 @@ if (typeof module !== 'undefined') module.exports = { CONFIG: CONFIG, MP: MP };
   $('app').addEventListener('pointerdown', function (e) { if (e.button > 0) return; var t = e.target; if (t.closest && (t.closest('#info') || t.closest('#ovInfo') || (t.closest('.pot') && S.mode === 'idle' && !S.busy))) return; onTap(); });
 
   // ---------- boot ----------
-  load(); buildPots(); layout();
+  load(); buildPots(); buildJP(); layout();
   var g0 = []; for (var x = 0; x < 5; x++) { var col = []; for (var y = 0; y < 3; y++) col.push(randSym(x) % 9 === 8 && (x === 0 || x === 4) ? 0 : randSym(x)); g0.push(col.map(function (s) { return s > 8 ? 4 : s; })); }
   buildReels(g0); renderTop(); setMode('idle'); setBusy(false);
   window.MP_UI = { state: S, layout: layout };
