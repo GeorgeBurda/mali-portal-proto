@@ -61,6 +61,7 @@ body.inF #fbar { display: flex; }
 #resp i.on { background: linear-gradient(135deg, #fff2c0, var(--gold) 60%, #8a6526); box-shadow: 0 0 6px var(--gold); }
 #resp.reset i.on { animation: pip .5s; }
 @keyframes pip { 0% { transform: rotate(45deg) scale(1.9); } 100% { transform: rotate(45deg) scale(1); } }
+#fheld { font: 600 11px Georgia; letter-spacing: 1px; color: #cbb88e; } #fheld b { color: var(--gold2); font-size: 13px; }
 #ftot { font: 700 18px Georgia, serif; color: var(--gold2); text-shadow: 0 1px 0 #000; }
 #tower { display: none; position: relative; flex: 1; justify-content: center; min-height: 0; margin: 4px auto 6px; width: calc(var(--cw) * 5 + 12px); flex-direction: column; gap: 4px; }
 body.inF #tower { display: flex; }
@@ -83,7 +84,11 @@ body.inF #tower { display: flex; }
 .set[data-k="0"] .cell.live { background: radial-gradient(circle, rgba(60,40,20,.15), rgba(60,40,20,.42)); box-shadow: inset 0 0 0 1.5px #8a6d36; }
 .cell.spin::before { content: ""; position: absolute; inset: 10%; border-radius: 4px; background: repeating-linear-gradient(180deg, rgba(217,180,90,.0) 0 6px, rgba(217,180,90,.55) 6px 9px); animation: spinc .18s linear infinite; }
 @keyframes spinc { from { background-position: 0 0; } to { background-position: 0 15px; } }
-.cell.gild svg.c { filter: drop-shadow(0 0 4px #ffe08a); }
+.cell.gild svg.c { filter: drop-shadow(0 0 4px #ffe08a) brightness(1.15) saturate(1.2); opacity: .95; }
+.cell.gild::after { content: ""; position: absolute; right: 8%; top: 8%; width: 22%; height: 22%; max-width: 12px; max-height: 12px; transform: rotate(45deg); background: linear-gradient(135deg, #fff6c8, #e2b955); box-shadow: 0 0 6px #ffe08a; }
+.cell.held.coin svg.c { filter: drop-shadow(0 0 5px rgba(255,214,120,.95)); }
+.cell.held.coin { background: radial-gradient(circle, rgba(255,214,120,.25), rgba(0,0,0,0) 70%); }
+.cell.got svg.c, .cell.got .v { opacity: .35; }
 .cell.pop { animation: cpop .35s ease-out; }
 @keyframes cpop { 0% { transform: scale(.4); } 70% { transform: scale(1.15); } 100% { transform: scale(1); } }
 .cell.flash { animation: cfl .5s; }
@@ -183,7 +188,7 @@ body.inF #tower { display: flex; }
 <div id="app">
   <div id="top"><span>Balance <b id="bal">0</b></span><span>Win <b id="win">0</b></span><span id="info">i</span></div>
   <div id="pots"></div>
-  <div id="fbar"><div id="resp"></div><div id="ftot">0</div></div>
+  <div id="fbar"><div id="resp"></div><div id="fheld"></div><div id="ftot">0</div></div>
   <div id="stage"><div id="reels"></div><svg id="lines"></svg></div>
   <div id="tower"><svg id="beams"></svg></div>
   <div id="cap"></div>
@@ -215,10 +220,11 @@ var CONFIG = {
   POT_CAP: [15, 12, 12],          // Portal pot triggers the feature when full; Expand / Gild pots stay charged until a feature uses them
   FEATURE: {
     RESPINS: 3, SETS: 4, MAX_WIN_X: 5000, GRAND_X: 1000,      // Grand = example value (x bet), awarded when the first cell of set 4 opens
-    TIERS: [[1, 2, 3, 4, 5], [5, 8, 10, 15, 20], [20, 30, 40, 60, 80], [80, 120, 200, 300, 500], [300, 500, 800, 1200, 2000]], // coin values x bet; tier 5 only via Gild on set 4
-    TIER_W: [40, 25, 17, 11, 7],
-    // per live cell per respin: coin / portal / expand chances by set (index 0 = bottom)
-    P_COIN: [0.17, 0.16, 0.16, 0.16], P_PORTAL: [0.0195, 0.025, 0.025, 0], P_EXPAND: [0, 0.07, 0.07, 0.07]
+    // per-set value ladders (x bet). Coins draw ranks 0..4; Gild moves a locked coin one rank up (rank 5) -> every set stays inside its own band
+    LADDER: [[1, 2, 3, 4, 5, 5], [5, 8, 10, 12, 15, 20], [20, 25, 30, 40, 50, 70], [80, 100, 150, 200, 300, 500]],
+    TIER_W: [[55, 25, 11, 6, 3], [50, 25, 13, 8, 4], [50, 25, 13, 8, 4], [45, 25, 15, 10, 5]],
+    // per live cell per respin: coin / portal / expand chances by set (index 0 = bottom); coins are sticky and reset respins
+    P_COIN: [0.045, 0.03, 0.03, 0.05], P_PORTAL: [0.012, 0.0265, 0.01, 0], P_EXPAND: [0, 0.05, 0.05, 0.05]
   },
   PAYLINES: null
 };
@@ -264,15 +270,15 @@ var MP = (function () {
   // cells: sets[k][i], i = x*3+y ; {st:'locked'|'live'|'held', v (x bet), kind:'coin'|'portal'|'expand', gild}
   function newFeature(mods, rng) {
     var sets = [];
-    for (var k = 0; k < F.SETS; k++) { var a = []; for (var i = 0; i < 15; i++) { if (k === 0) a.push({ st: 'live' }); else { var r = wpick(rng, F.TIER_W); a.push({ st: 'locked', v: F.TIERS[k][r], r: r, t: k }); } } sets.push(a); }
-    return { mods: { expand: !!mods.expand, gild: !!mods.gild }, sets: sets, respins: F.RESPINS, total: 0, grand: 0, spins: 0, top: 0, gilded: [false, false, false, false], opens: 0, done: false, capped: false };
+    for (var k = 0; k < F.SETS; k++) { var a = []; for (var i = 0; i < 15; i++) { if (k === 0) a.push({ st: 'live' }); else { var r = wpick(rng, F.TIER_W[k]); a.push({ st: 'locked', v: F.LADDER[k][r], r: r, t: k }); } } sets.push(a); }
+    return { mods: { expand: !!mods.expand, gild: !!mods.gild }, sets: sets, respins: F.RESPINS, total: 0, held: 0, grand: 0, spins: 0, top: 0, gilded: [false, false, false, false], opens: 0, done: false, capped: false };
   }
   function cp(c) { return Object.assign({}, c); }
   function snap(st) { return st.sets.map(function (a) { return a.map(cp); }); }
-  function addWin(st, x) { st.total += x; if (st.total >= F.MAX_WIN_X) { st.total = F.MAX_WIN_X; st.capped = true; } }
+  function addWin(st, x) { st.total += x; if (st.total + st.held >= F.MAX_WIN_X) st.capped = true; }
   function gildSet(st, k, ev) { // all still-locked coins of set k move one tier up (same rank)
     if (k >= F.SETS || st.gilded[k] || !st.mods.gild) return; st.gilded[k] = true; var cells = [];
-    st.sets[k].forEach(function (c, i) { if (c.st === 'locked') { c.t += 1; c.v = F.TIERS[c.t][c.r]; c.gild = true; cells.push([i, c.v, c.t]); } });
+    st.sets[k].forEach(function (c, i) { if (c.st === 'locked') { c.r += 1; c.v = F.LADDER[k][c.r]; c.gild = true; cells.push([i, c.v, c.t]); } });
     ev.push({ type: 'gild', set: k, cells: cells });
   }
   function open(st, k, i, ev, how, from) {
@@ -294,21 +300,32 @@ var MP = (function () {
     for (var k = 0; k < F.SETS; k++) for (var i = 0; i < 15; i++) {
       var c = st.sets[k][i]; if (c.st !== 'live') continue;
       var r = rng.next(), pc = F.P_COIN[k], pp = F.P_PORTAL[k], pe = st.mods.expand ? F.P_EXPAND[k] : 0;
-      if (r < pc) { var rr = wpick(rng, F.TIER_W); c.st = 'held'; c.kind = 'coin'; c.v = F.TIERS[k][rr]; landed.push([k, i]); }
+      if (r < pc) { var rr = wpick(rng, F.TIER_W[k]); c.st = 'held'; c.kind = 'coin'; c.v = F.LADDER[k][rr]; c.t = k; landed.push([k, i]); }
       else if (r < pc + pp) { c.st = 'held'; c.kind = 'portal'; landed.push([k, i]); }
       else if (r < pc + pp + pe) { c.st = 'held'; c.kind = 'expand'; landed.push([k, i]); }
+    }
+    if (st.spins === 1 && !landed.length) { // first respin always lands at least one coin on the bottom set (no empty features)
+      var free = []; for (i = 0; i < 15; i++) if (st.sets[0][i].st === 'live') free.push(i);
+      var fi = free[rint(rng, free.length)], fc = st.sets[0][fi], fr = wpick(rng, F.TIER_W[0]); fc.st = 'held'; fc.kind = 'coin'; fc.v = F.LADDER[0][fr]; fc.t = 0; landed.push([0, fi]);
     }
     ev.push({ type: 'land', cells: landed.map(function (q) { return { set: q[0], cell: q[1], c: cp(st.sets[q[0]][q[1]]) }; }) });
     landed.forEach(function (q) { var k = q[0], i = q[1], c = st.sets[k][i];
       if (st.capped) return;
-      if (c.kind === 'coin') { addWin(st, c.v); ev.push({ type: 'collect', set: k, cell: i, v: c.v, total: st.total }); }
+      if (c.kind === 'coin') { st.held += c.v; reset = true; if (st.total + st.held >= F.MAX_WIN_X) st.capped = true; }
       else if (c.kind === 'portal') { if (k + 1 < F.SETS && open(st, k + 1, i, ev, 'portal', [k, i])) reset = true; }
       else if (c.kind === 'expand') { var j = expandTarget(st, k, i, rng); if (j >= 0) { open(st, k, j, ev, 'expand', [k, i]); reset = true; } else ev.push({ type: 'noop', set: k, cell: i, how: 'expand', from: [k, i] }); }
     });
     if (reset) st.respins = F.RESPINS; else st.respins--;
     var live = 0; st.sets.forEach(function (a) { a.forEach(function (c) { if (c.st === 'live') live++; }); });
-    ev.push({ type: 'state', respins: st.respins, reset: reset, total: st.total, live: live });
-    if (st.respins <= 0 || live === 0 || st.capped || st.spins >= 200) { st.done = true; st.reason = st.capped ? 'max' : live === 0 ? 'full' : 'respins'; ev.push({ type: 'end', reason: st.reason, total: st.total }); }
+    ev.push({ type: 'state', respins: st.respins, reset: reset, total: st.total, held: st.held, live: live });
+    if (st.respins <= 0 || live === 0 || st.capped || st.spins >= 300) {
+      st.done = true; st.reason = st.capped ? 'max' : live === 0 ? 'full' : 'respins';
+      // end collection: every held coin is counted up (bottom set first, then upwards, column by column)
+      var list = [];
+      for (k = 0; k < F.SETS; k++) for (i = 0; i < 15; i++) { var h = st.sets[k][i]; if (h.st === 'held' && h.kind === 'coin') { st.total += h.v; list.push({ set: k, cell: i, v: h.v, total: Math.min(F.MAX_WIN_X, st.total) }); } }
+      st.held = 0; if (st.total >= F.MAX_WIN_X) { st.total = F.MAX_WIN_X; st.capped = true; }
+      ev.push({ type: 'collectEnd', list: list, total: st.total }); ev.push({ type: 'end', reason: st.reason, total: st.total });
+    }
     return ev;
   }
   function runFeature(mods, rng, record) {
@@ -501,7 +518,7 @@ if (typeof module !== 'undefined') module.exports = { CONFIG: CONFIG, MP: MP };
     return '<svg class="c" viewBox="0 0 100 100"><use href="#s' + (c.kind === 'portal' ? 9 : 10) + '"/></svg>';
   }
   function cellEl(k, i) { return $('c' + k + '_' + i); }
-  function renderCell(k, i, c) { var e = cellEl(k, i); e.className = 'cell ' + c.st + (c.gild && c.st === 'locked' ? ' gild' : ''); e.innerHTML = cellHTML(c, k); }
+  function renderCell(k, i, c) { var e = cellEl(k, i); e.className = 'cell ' + c.st + (c.st === 'held' && c.kind === 'coin' ? ' coin' : '') + (c.gild && c.st === 'locked' ? ' gild' : ''); e.innerHTML = cellHTML(c, k); }
   function buildTower() {
     var tw = $('tower'); Array.prototype.slice.call(tw.querySelectorAll('.set')).forEach(function (e) { e.remove(); });
     var gp = $('grandP'); if (gp) gp.remove();
@@ -515,7 +532,7 @@ if (typeof module !== 'undefined') module.exports = { CONFIG: CONFIG, MP: MP };
   async function startFeature() {
     $('ovIntro').classList.remove('on'); setBusy(true); setMode('featSpin');
     document.body.classList.add('inF'); for (var i = 1; i < 3; i++) $('pot' + i).classList.toggle('off', !S.feat.run.mods[i === 1 ? 'expand' : 'gild']);
-    layout(); buildTower(); layoutTower(); renderResp(F.RESPINS); $('ftot').textContent = '0';
+    layout(); buildTower(); layoutTower(); renderResp(F.RESPINS); $('ftot').textContent = '0'; setHeld(0);
     await wait(300);
     var st0 = S.feat.run.steps[0]; await playEvents(st0.ev); S.feat.step = 1;
     setMode('featIdle'); setBusy(false);
@@ -548,11 +565,25 @@ if (typeof module !== 'undefined') module.exports = { CONFIG: CONFIG, MP: MP };
     await wait(560);
     return g;
   }
+  function setHeld(h) { S.feat.held = h; $('fheld').innerHTML = h > 0 ? 'HELD <b>' + fm(h * C.BET) + '</b>' : ''; }
+  async function endCollect(e) {
+    var n = e.list.length; if (!n) return; await wait(350);
+    var per = Math.max(70, Math.min(260, 3200 / n)), ft = $('ftot'), held = S.feat.held || 0;
+    $('tower').classList.add('collecting');
+    for (var j = 0; j < n; j++) { var q = e.list[j], el = cellEl(q.set, q.cell), r = rect(el), t = rect(ft);
+      el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash', 'got');
+      var d = document.createElement('div'); d.className = 'float'; d.textContent = '+' + fk(q.v * C.BET); d.style.left = r.x + 'px'; d.style.top = r.y + 'px'; $('fx').appendChild(d);
+      (function (d) { anim(d, [{ transform: 'translate(-50%,-50%) scale(1.2)', opacity: 1 }, { transform: 'translate(' + (t.x - r.x - 20) + 'px,' + (t.y - r.y) + 'px) scale(.8)', opacity: .2 }], per * 2.2, { easing: 'ease-in' }).then(function () { d.remove(); }); })(d);
+      held = Math.max(0, held - q.v); setHeld(held);
+      var from = S.feat.total; S.feat.total = q.total * C.BET; tickNum(ft, from, S.feat.total, per * 0.9);
+      await wait(per); }
+    S.feat.total = e.total * C.BET; ft.textContent = fm(S.feat.total); setHeld(0); await wait(500); $('tower').classList.remove('collecting');
+  }
   async function collectTo(el, cr, total) { var r = rect(el); floatText('+' + fk(cr), r.x, r.y); var ft = $('ftot'), from = S.feat.total; S.feat.total = total * C.BET; await tickNum(ft, from, S.feat.total, 300); }
   async function playEvents(evs) {
     var sets = S.feat.sets;
     for (var j = 0; j < evs.length; j++) { var e = evs[j];
-      if (e.type === 'collect') { cellEl(e.set, e.cell).classList.add('flash'); await collectTo(cellEl(e.set, e.cell), e.v * C.BET, e.total); }
+      if (e.type === 'collectEnd') { await endCollect(e); }
       else if (e.type === 'open') {
         var g = await beam(e.from, [e.set, e.cell], e.how), el = cellEl(e.set, e.cell), v = e.v;
         el.classList.add('flash'); await collectTo(el, v * C.BET, e.total);
@@ -564,10 +595,10 @@ if (typeof module !== 'undefined') module.exports = { CONFIG: CONFIG, MP: MP };
       else if (e.type === 'grand') { $('set3').classList.add('flash'); await bigMsg('GRAND<small>+' + fm(e.x * C.BET) + '</small>', 1800); var ft = $('ftot'), f0 = S.feat.total; S.feat.total = e.total * C.BET; await tickNum(ft, f0, S.feat.total, 400); }
       else if (e.type === 'gild') {
         var setEl = $('set' + e.set); anim(setEl, [{ filter: 'brightness(1)' }, { filter: 'brightness(2.2) sepia(.6)' }, { filter: 'brightness(1)' }], 700);
-        e.cells.forEach(function (q, n) { var c = sets[e.set][q[0]]; c.t = q[2]; c.v = q[1]; c.gild = true; setTimeout(function () { renderCell(e.set, q[0], c); cellEl(e.set, q[0]).classList.add('pop'); }, dur(120 + n * 25)); });
+        e.cells.forEach(function (q, n) { var c = sets[e.set][q[0]]; c.v = q[1]; c.gild = true; setTimeout(function () { renderCell(e.set, q[0], c); cellEl(e.set, q[0]).classList.add('pop'); }, dur(120 + n * 25)); });
         await wait(700 + e.cells.length * 25);
       }
-      else if (e.type === 'state') renderResp(e.respins, false);
+      else if (e.type === 'state') { renderResp(e.respins, e.reset); setHeld(e.held); }
       else if (e.type === 'end') { /* summary after */ }
     }
   }
@@ -592,7 +623,7 @@ if (typeof module !== 'undefined') module.exports = { CONFIG: CONFIG, MP: MP };
     $('infoCard').innerHTML = '<h1>Mali Portal</h1><div>Prototype · bet ' + C.BET + ' (' + C.LINES + ' lines × ' + C.LINE_BET + ') · tap anywhere to spin, tap again to skip.</div>' +
       '<h2>Pays (credits)</h2><table>' + rows + '</table><div><svg viewBox="0 0 100 100"><use href="#s8"/></svg> Wild on reels 2–4, substitutes for all paying symbols.</div>' +
       '<h2>Pots</h2><div><b>Portal</b> (' + C.POT_CAP[0] + ' symbols) starts the Portal feature when full. <b>Expand</b> and <b>Gild</b> (' + C.POT_CAP[1] + ' each) stay charged until a feature uses them. Pot fills are saved.</div>' +
-      '<h2>Portal feature</h2><div>Four 5×3 sets. Only the bottom set spins at first; the upper sets hold locked gold weights of growing value. Coins on live cells are collected. A Portal opens the cell directly above (its weight is collected, the cell starts spinning). Expand opens a locked cell on the same set. Gild upgrades the locked weights on the set above your highest open set by one tier. Opening a cell resets respins to 3. Reaching set IV pays the Grand (' + fm(F.GRAND_X * C.BET) + ', example value). Max win ' + fm(F.MAX_WIN_X * C.BET) + '.</div>' +
+      '<h2>Portal feature</h2><div>Four 5×3 sets. Only the bottom set spins at first; the upper sets hold locked gold weights of growing value. Coins landing on live cells stick and reset respins to 3; they are collected at the end. A Portal opens the cell directly above: its weight is collected at once and the cell starts spinning. Expand does the same for a locked cell on the same set. Gild raises the locked weights on the set above your highest open set one step (each set stays inside its own value band). Opening a cell also resets respins to 3. Reaching set IV pays the Grand (' + fm(F.GRAND_X * C.BET) + ', example value). Max win ' + fm(F.MAX_WIN_X * C.BET) + '.</div>' +
       '<h2>Cheats</h2><div>Tap a pot to fill it. URL: ?bonus=1&expand=1&gild=1, ?seed=N, ?turbo=1</div>' +
       '<div><span class="btn" id="bTurbo">Turbo: ' + (TURBO ? 'on' : 'off') + '</span><span class="btn" id="bReset">Reset balance</span><span class="btn" id="bClose">Close</span></div>';
     $('bTurbo').onclick = function (e) { e.stopPropagation(); TURBO = !TURBO; this.textContent = 'Turbo: ' + (TURBO ? 'on' : 'off'); };
